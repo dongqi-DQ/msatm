@@ -20,7 +20,6 @@ def calculate_frac_ice(T,varargin):
        fice(fice>1) = 1
        fliq = 1-fice
        
-    # what is nargout???
     #if nargout > 2:
     dfliqdT = np.zeros(T.shape)
     if c.ice != 0:

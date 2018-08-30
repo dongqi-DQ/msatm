@@ -102,7 +102,7 @@ def calculate_LCL(T,r,p,varargin):
         T_LCLi = T_LCLl
 
     p_LCL = p*(T_LCL/T)**(cpm/Rm)
-    p_LCLl = p*(T_LCLl/T)**(cpm/Rm
+    p_LCLl = p*(T_LCLl/T)**(cpm/Rm)
     p_LCLi = p*(T_LCLi/T)**(cpm/Rm)       
     
     varargout = [T_LCLl,p_LCLl,T_LCLi,p_LCLi]
