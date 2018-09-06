@@ -1,3 +1,8 @@
+from saturation_adjustment import saturation_adjustment
+from load_constants import load_constants
+from calculate_LCL import calculate_LCL
+from integrate_upwards import integrate_upwards
+
 def calculate_adiabat(Ts,rts,ps,p,varargin):
     """
     # Function to calculate an adiabatic parcel ascent with various thermodynamic assumptions
@@ -72,13 +77,10 @@ def calculate_adiabat(Ts,rts,ps,p,varargin):
     # 
     """
 
-
-
-
     # Read in the optional arguments
     # These modify the default characteristics set in load_constants.m
 
-    c = atm.load_constants(varargin[1:])
+    c = load_constants(varargin[1:])
     gamma = c.gamma
     #if nargin >= 5 gamma  = varargin{1}  end
 
@@ -114,100 +116,51 @@ def calculate_adiabat(Ts,rts,ps,p,varargin):
     if gamma ==1:
         rts = rvs 
    
-# Sugata is up to here!
 
+    T_LCL,p_LCL,junk = calculate_LCL(Ts,rts,ps,varargin[1:])
 
-[T_LCL,p_LCL] = atm.calculate_LCL(Ts,rts,ps,varargin{2:end})
+    Im_prev = np.zeros(Ts.shape,dtype=bool)
+    for k in range(p.shape[0]):
 
-Im_prev = zeros(size(Ts))
-for k = 1:size(p,1)
+        # Pressure at this level
+        pk = p[k,...].squeeze() #squeeze(p(k,:,:,:))
 
-    # Pressure at this level
-    pk = squeeze(p(k,:,:,:))
+        # Find regions where the surface pressure is larger than the current level p(k)
+        Ia = ps>=pk  #ps>=reshape(p(k,:,:,:),xygrid)
 
-    # Find regions where the surface pressure is larger than the current level p(k)
-    Ia = ps>=reshape(p(k,:,:,:),xygrid)
-    
-    # Find regions where the LCL pressure is smaller than the current level p(k)
-    Id = Ia & p_LCL<=reshape(p(k,:,:,:),xygrid)
-    
-    # Find the temperature in the regions below the LCL
-    T(k,Id) = T_LCL(Id).*(pk(Id)./p_LCL(Id)).^(Rm(Id)./cpm(Id))
-    rt(k,Id) = rts(Id)
-    rv(k,Id) = rvs(Id)
-    rl(k,Id) = 0
-    ri(k,Id) = 0
-    
-    # Find regions where the LCL pressure is smaller than the current level p(k)
-    Im = Ia & p_LCL>reshape(p(k,:,:,:),xygrid)
-    
-   
-    # Find regions where the LCL is between levels (k-1) and k
-    Is = Im & ~Im_prev
- 
-    ## Integrate upwards (towards lower pressure) from the surface to the current model level for the regions where the current level p(k) is just above the surface
+        # Find regions where the LCL pressure is smaller than the current level p(k)
+        Id = (Ia) & (p_LCL <= pk)   #Ia & p_LCL<=reshape(p(k,:,:,:),xygrid)
 
-    # Calculate the dp
-    if sum(Is(:))>0
-      dps = reshape(p(k,:,:,:),xygrid) - p_LCL
-      [T(k,Is),rt(k,Is),rv(k,Is),rl(k,Is),ri(k,Is)] = integrate_upwards(T_LCL(Is),rts(Is),p_LCL(Is),dps(Is),gamma,c.type,c.ice,c.deltaT)
-    end
-    
-    
-    ## Now integrate from level k to level k+1
-    if k < size(p,1)
-       [T(k+1,Im),rt(k+1,Im),rv(k+1,Im),rl(k+1,Im),ri(k+1,Im)] = integrate_upwards(T(k,Im),rt(k,Im),p(k,Im),dp(k,Im),gamma,c.type,c.ice,c.deltaT)
-    end
-        
-    Im_prev = Im
+        # Find the temperature in the regions below the LCL
+        T[k,Id] = T_LCL[Id]*(pk[Id]/p_LCL[Id])**(Rm[Id]/cpm[Id])
+        rt[k,Id] = rts[Id]
+        rv[k,Id] = rvs[Id]
+        rl[k,Id] = 0
+        ri[k,Id] = 0
 
-end
+        # NOTE: Should this be "greater than.." ? - Sugata
+        # Find regions where the LCL pressure is smaller than the current level p(k)
+        Im = (Ia) & (p_LCL > pk) #Ia & p_LCL>reshape(p(k,:,:,:),xygrid)
 
+        # Find regions where the LCL is between levels (k-1) and k
+        Is = Im & ~Im_prev
 
+        ## Integrate upwards (towards lower pressure) from the surface to the current model level for the regions where the current level p(k) is just above the surface
 
-T_rho = T.*(1 + rv./c.eps)./(1+rv+rl+ri)
+        # Calculate the dp
+        if Is.sum()>0: #sum(Is(:))>0
+            dps = pk - p_LCL
+            T[k,Is],rt[k,Is],rv[k,Is],rl[k,Is],ri[k,Is] = integrate_upwards(T_LCL[Is],rts[Is],p_LCL[Is],dps[Is],gamma,c.modeltype,c.ice,c.deltaT)
 
+        ## Now integrate from level k to level k+1
+        if k < p.shape[0]: #size(p,1)
+            T[k+1,Im],rt[k+1,Im],rv[k+1,Im],rl[k+1,Im],ri[k+1,Im] = integrate_upwards(T[k,Im],rt[k,Im],p[k,Im],dp[k,Im],gamma,c.modeltype,c.ice,c.deltaT)
+            
+        Im_prev = Im
 
+    T_rho = T*(1 + rv/c.eps)/(1+rv+rl+ri)
 
-
-end
     return T,rv,rl,ri,T_rho 
 
 
-
-
-function [Tkp1,rtkp1,rvkp1,rlkp1,rikp1] = integrate_upwards(Tk,rtk,pk,dp,gamma,type,ice,deltaT)
-#
-# Integrate the equation for enthalpy upwards. 
-# 1) 2nd order Runge-Kutta while conserving total water
-# 2) precipitation fall out by fraction gamma
-#
-# If gamma == 1, then the calculation of dT/dp is done assuming no water,
-# and no precipitation fallout is required.
-#
-    # calculate predictor
-    [dTdp,rvk] = atm.calculate_dTdp_adiabatic(Tk,rtk,pk,gamma,type,ice,deltaT)
-    
-    T1 = Tk + dTdp.*dp./2
-    p1 = (pk+dp./2)
-    [rv1,rl1,ri1] = atm.saturation_adjustment(p1,T1,rtk,type,ice,deltaT)
-    if rl1+ri1 > 0
-       [rl1,ri1] = atm.simple_fallout(T1,rvk-rv1,rl1,ri1,gamma,type,ice,deltaT)
-    end
-    rt1 = rv1+rl1+ri1
-    
-    # calculate corrector 
-    dTdp = atm.calculate_dTdp_adiabatic(T1,rt1,p1,gamma,type,ice,deltaT)
-    
-    Tkp1 = Tk + dTdp.*dp
-    pkp1 = pk+dp
-    [rvkp1,rlkp1,rikp1] = atm.saturation_adjustment(pkp1,Tkp1,rtk,type,ice,deltaT)
-    if rlkp1+rikp1 > 0
-       [rlkp1,rikp1] = atm.simple_fallout(Tkp1,rvk-rvkp1,rlkp1,rikp1,gamma,type,ice,deltaT)
-    end
-    rtkp1 = rvkp1+rlkp1+rikp1
-    
-    
-end
-    
 
