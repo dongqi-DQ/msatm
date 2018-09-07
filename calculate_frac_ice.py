@@ -1,13 +1,13 @@
 import numpy as np
+from load_constants import load_constants
 
-def calculate_frac_ice(T,varargin):
+def calculate_frac_ice(T,c=load_constants('default')):
     """
-    # Calculate the fraction of liquid and ice for a saturation adjustment
-    #
-    # [fliq,fice,[dfliqdT,dficedT]] = calculate_frac_ice(T,[type,ice,deltaT])
-    #
+    Calculate the fraction of liquid and ice for a saturation adjustment
+    
+    [fliq,fice,[dfliqdT,dficedT]] = calculate_frac_ice(T,constants)
+
     """
-    c = load_constants(varargin)
 
     if c.ice == 0: 
         fliq = np.ones(T.shape)
@@ -15,9 +15,9 @@ def calculate_frac_ice(T,varargin):
         dfliqdT = 0
         dficedT = 0
     else:
-       fice = -( T-(c.T0) )./(c.deltaT)
-       fice(fice<0) = 0
-       fice(fice>1) = 1
+       fice = -( T-(c.T0) )/(c.deltaT)
+       fice[fice<0] = 0
+       fice[fice>1] = 1
        fliq = 1-fice
        
     #if nargout > 2:

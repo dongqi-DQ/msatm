@@ -2,87 +2,82 @@ from saturation_adjustment import saturation_adjustment
 from load_constants import load_constants
 from calculate_LCL import calculate_LCL
 from integrate_upwards import integrate_upwards
+import numpy as np
+import pdb
 
-def calculate_adiabat(Ts,rts,ps,p,varargin):
+def calculate_adiabat(Ts,rts,ps,p,c=load_constants('default'),gamma=0):
     """
-    # Function to calculate an adiabatic parcel ascent with various thermodynamic assumptions
-    #
-    # [T,rv,rl,ri,T_rho] = calculate_adiabat(Ts,rts,ps,p,[gamma,type,ice,deltaT])
-    #
-    # INPUTS:
-    #
-    # Ts = parcel temperature (K)
-    # rts = parcel total mixing ratio (kg/kg)
-    # ps = Parcel pressure (Pa)
-    # p = pressure levels to integrate parcel (Pa)
-    #
-    # gamma = fraction of condensate removed from parcel
-    # type, ice, deltaT are microphysical parameters
-    # See e_sat.m for details.
-    #
-    # OUTPUTS:
-    #
-    # T = temperature of parcel at all pressure levels (K)
-    # rv = water vapor mixing raio of parcel (kg/kg)
-    # rl = liquid water mixing ratio of parcel (kg/kg)
-    # ri = solid water mixing ratio of parcel (kg/kg)
-    # T_rho = density temperature of parcel (K)
-    #
-    # p must either be a vector or of size [Np size(Ts)] and should be sorted largest to smallest
-    # Ts, ps, and rts may be up to 3 dimensions
-    # The outputs are of size [Np size(Ts)]
-    #
-    # Parcel is lifted from ps to the top of the pressure matrix
-    # all values of p greater than  ps are filled with Nans
-    #
-    # This is helpful to vectorize the parcel ascent calculation over a 
-    # matrix of different columns which may have different surface pressures
-    #
-    #
-    # The adiabat is calculated in three steps.
-    #
-    # 1) The LCL pressure is calculated using the method of Romps (2017).
-    #    This method provides an analytic exact solution for the LCL in terms
-    #    of the Lambert W function. The MATLAB library for the W function must
-    #    be loaded, so this part of the calculation can be slow the first time
-    #    the adiabat calculator is called. 
-    #
-    #    If the LCL lies in the mixed-phase range, the calculation is no longer
-    #    analytic, and an iteration is required. See calculate_LCL.m for more
-    #    details
-    #   
-    # 2) For levels below the LCL, the parcel is assumed to conserve its
-    #    potential temperature theta = T*(p/p_LCL)^(Rm/cpm) and its mixing
-    #    ratio r. This gives the temperature by simple rearrangement
-    #
-    # 3) Above the LCL, the parcel temperature is calculated by by integrating 
-    #    the equation for the lapse rate:
-    #
-    #                       dT/dp = f(T,rt,p) 
-    #
-    #    See the function calculate_dTdp_adiabatic.m for more details
-    #
-    #    The ascent is performed by calculating dT/dp assuming no fallout and
-    #    then removing a fraction gamma of the water condensed during that step
-    #    isothermally. In the case of gamma == 1, dT/dp is calculated assuming 
-    #    no condensed water for pseudoadiabatic ascent.
-    #
-    #
-    #
-    # The accuracy of these calculations may be checked using the script
-    # test_script.m. For the case of no ice and the default thermodynamics,
-    # an exact solution for a reversible parcel ascent is conservation of
-    # entropy. This script is accurate to within 0.5 K for dp = 50 hPa, and to
-    # within 0.1 K for dp = 20 hPa.
-    # 
+     Function to calculate an adiabatic parcel ascent with various thermodynamic assumptions
+    
+     [T,rv,rl,ri,T_rho] = calculate_adiabat(Ts,rts,ps,p,[gamma,type,ice,deltaT])
+    
+     INPUTS:
+    
+     Ts = parcel temperature (K)
+     rts = parcel total mixing ratio (kg/kg)
+     ps = Parcel pressure (Pa)
+     p = pressure levels to integrate parcel (Pa)
+    
+     gamma = fraction of condensate removed from parcel
+     type, ice, deltaT are microphysical parameters
+     See e_sat.m for details.
+    
+     OUTPUTS:
+    
+     T = temperature of parcel at all pressure levels (K)
+     rv = water vapor mixing raio of parcel (kg/kg)
+     rl = liquid water mixing ratio of parcel (kg/kg)
+     ri = solid water mixing ratio of parcel (kg/kg)
+     T_rho = density temperature of parcel (K)
+    
+     p must either be a vector or of size [Np size(Ts)] and should be sorted largest to smallest
+     Ts, ps, and rts may be up to 3 dimensions
+     The outputs are of size [Np size(Ts)]
+    
+     Parcel is lifted from ps to the top of the pressure matrix
+     all values of p greater than  ps are filled with Nans
+    
+     This is helpful to vectorize the parcel ascent calculation over a 
+     matrix of different columns which may have different surface pressures
+    
+    
+     The adiabat is calculated in three steps.
+    
+     1) The LCL pressure is calculated using the method of Romps (2017).
+        This method provides an analytic exact solution for the LCL in terms
+        of the Lambert W function. The MATLAB library for the W function must
+        be loaded, so this part of the calculation can be slow the first time
+        the adiabat calculator is called. 
+    
+        If the LCL lies in the mixed-phase range, the calculation is no longer
+        analytic, and an iteration is required. See calculate_LCL.m for more
+        details
+       
+     2) For levels below the LCL, the parcel is assumed to conserve its
+        potential temperature theta = T*(p/p_LCL)^(Rm/cpm) and its mixing
+        ratio r. This gives the temperature by simple rearrangement
+    
+     3) Above the LCL, the parcel temperature is calculated by by integrating 
+        the equation for the lapse rate:
+    
+                           dT/dp = f(T,rt,p) 
+    
+        See the function calculate_dTdp_adiabatic.m for more details
+    
+        The ascent is performed by calculating dT/dp assuming no fallout and
+        then removing a fraction gamma of the water condensed during that step
+        isothermally. In the case of gamma == 1, dT/dp is calculated assuming 
+        no condensed water for pseudoadiabatic ascent.
+    
+    
+    
+     The accuracy of these calculations may be checked using the script
+     test_script.m. For the case of no ice and the default thermodynamics,
+     an exact solution for a reversible parcel ascent is conservation of
+     entropy. This script is accurate to within 0.5 K for dp = 50 hPa, and to
+     within 0.1 K for dp = 20 hPa.
+     
     """
-
-    # Read in the optional arguments
-    # These modify the default characteristics set in load_constants.m
-
-    c = load_constants(varargin[1:])
-    gamma = c.gamma
-    #if nargin >= 5 gamma  = varargin{1}  end
 
     # Arrangement of the columns
     xygrid = Ts.shape
@@ -109,7 +104,7 @@ def calculate_adiabat(Ts,rts,ps,p,varargin):
     rt = np.zeros((p.shape[0],*xygrid))*np.nan #nan([size(p,1) xygrid ]) # total water
 
     # Initialize surface values
-    [rvs,junk1,junk2,junk3] = saturation_adjustment(ps,Ts,rts,[c.modeltype,c.ice,c.deltaT])
+    rvs,junk1,junk2,junk3 = saturation_adjustment(ps,Ts,rts,c=c)
     Rm = c.Rd + c.Rv*rvs
     cpm = c.cp + c.cpv*rvs
 
@@ -117,13 +112,13 @@ def calculate_adiabat(Ts,rts,ps,p,varargin):
         rts = rvs 
    
 
-    T_LCL,p_LCL,junk = calculate_LCL(Ts,rts,ps,varargin[1:])
+    T_LCL,p_LCL,junk = calculate_LCL(Ts,rts,ps,c=c)
 
     Im_prev = np.zeros(Ts.shape,dtype=bool)
     for k in range(p.shape[0]):
 
         # Pressure at this level
-        pk = p[k,...].squeeze() #squeeze(p(k,:,:,:))
+        pk = p[k,...] #squeeze(p(k,:,:,:))
 
         # Find regions where the surface pressure is larger than the current level p(k)
         Ia = ps>=pk  #ps>=reshape(p(k,:,:,:),xygrid)
@@ -150,11 +145,10 @@ def calculate_adiabat(Ts,rts,ps,p,varargin):
         # Calculate the dp
         if Is.sum()>0: #sum(Is(:))>0
             dps = pk - p_LCL
-            T[k,Is],rt[k,Is],rv[k,Is],rl[k,Is],ri[k,Is] = integrate_upwards(T_LCL[Is],rts[Is],p_LCL[Is],dps[Is],gamma,c.modeltype,c.ice,c.deltaT)
-
+            T[k,Is],rt[k,Is],rv[k,Is],rl[k,Is],ri[k,Is] = integrate_upwards(T_LCL[Is],rts[Is],p_LCL[Is],dps[Is],c=c,gamma=gamma)
         ## Now integrate from level k to level k+1
-        if k < p.shape[0]: #size(p,1)
-            T[k+1,Im],rt[k+1,Im],rv[k+1,Im],rl[k+1,Im],ri[k+1,Im] = integrate_upwards(T[k,Im],rt[k,Im],p[k,Im],dp[k,Im],gamma,c.modeltype,c.ice,c.deltaT)
+        if (k < p.shape[0]-1) & (Im.sum()>0): #size(p,1)
+            T[k+1,Im],rt[k+1,Im],rv[k+1,Im],rl[k+1,Im],ri[k+1,Im] = integrate_upwards(T[k,Im],rt[k,Im],p[k,Im],dp[k,Im],c=c,gamma=gamma)
             
         Im_prev = Im
 

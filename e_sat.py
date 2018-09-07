@@ -1,42 +1,42 @@
 from load_constants import load_constants
 import numpy as np
+from calculate_frac_ice import calculate_frac_ice
 
-def e_sat(T,varargin):
+def e_sat(T,c=load_constants('default')):
     """
-    # Function ot calculate saturation vapor pressure
-    #
-    # [es[,esl,esi]] = e_sat(T[,type,ice,deltaT])
-    #
-    # es = saturation vapor pressure (Pa)
-    # T = temperature (K)
-    #
-    # type = {'default','bolton','teten','sam'}
-    # ice =  {[0] , [1] }
-    # deltaT = mixed-phase temperature ranges
+     Function ot calculate saturation vapor pressure
+    
+     [es[,esl,esi]] = e_sat(T[,type,ice,deltaT])
+    
+     es = saturation vapor pressure (Pa)
+     T = temperature (K)
+    
+     type = {'default','bolton','teten','sam'}
+     ice =  {[0] , [1] }
+     deltaT = mixed-phase temperature ranges
     """
-    c = load_constants(varargin)
 
     ## Calculate saturation vapor pressure over liquid and solid
-    if c.modeltype = 'default':
+    if c.modeltype == 'default':
         # Thermodynamically consistent definition of saturation curves
         # assuming that the heat capacities of all consituents are
         # independent of temperature
         # i.e. integral of Clausius-Clapeyron equation with constant heat
         # capacities. See Romps (2008) for details.
 
-        esl = c.e0*(T/c.T0).^((c.cpv-c.cpl)/c.Rv)*
+        esl = c.e0*(T/c.T0)**((c.cpv-c.cpl)/c.Rv)*\
              np.exp( ( c.Lv0 - c.T0*(c.cpv-c.cpl) )/c.Rv * ( 1/c.T0 - 1/T ) )
 
-        esi = c.e0*(T/c.T0).^((c.cpv-c.cpi)/c.Rv)*
+        esi = c.e0*(T/c.T0)**((c.cpv-c.cpi)/c.Rv)*\
              np.exp( ( c.Ls0 - c.T0*(c.cpv-c.cpi) )/c.Rv * ( 1/c.T0 - 1/T ) )
     
-    elif c.modeltype = 'bolton':
+    elif c.modeltype == 'bolton':
         # Bolton's formulas (Bolton, 1980) 
         # Used in George Bryan's CM1
         esl = 611.2*np.exp( 17.67      * ( T  - 273.15 ) / ( T  - 29.65 ) )
         esi = 611.2*np.exp( 21.8745584 * ( T  - 273.15 ) / ( T  - 7.66  ) )
 
-    elif c.modeltype = 'teten':
+    elif c.modeltype == 'teten':
         # Teten's formulas
         # Used in ECMWF
         # coefficients in Tetens saturation vapor pressure es = es0 * np.exp(a3 * (T-T0)/(T-a4))      
@@ -50,7 +50,7 @@ def e_sat(T,varargin):
         esl       = es0 * np.exp(a3l * (T - T0)/(T - a4l))
         esi       = es0 * np.exp(a3i * (T - T0)/(T - a4i))
 
-    elif c.modeltype = 'sam':
+    elif c.modeltype == 'sam':
         # Formulation in SAM model
         # Probably not a good idea to use this without ice
 
@@ -63,7 +63,7 @@ def e_sat(T,varargin):
         a6 = 0.640689451e-10
         a7 = -0.952447341e-13
         a8 = -0.976195544e-15
-        dt = max(-80.,T-273.16)
+        dt = np.max(-80.,T-273.16)
 
         esl = a0 + dt*(a1+dt*(a2+dt*(a3+dt*(a4+dt*(a5+dt*(a6+dt*(a7+a8*dt)))))))
 
@@ -80,9 +80,9 @@ def e_sat(T,varargin):
         a8 = 0.252751365e-14
         dt = T[T>185]-273.16
 
-        esi(T>185) = a0 + dt*(a1+dt*(a2+dt*(a3+dt*(a4+dt*(a5+dt*(a6+dt*(a7+a8*dt)))))))
+        esi[T>185] = a0 + dt*(a1+dt*(a2+dt*(a3+dt*(a4+dt*(a5+dt*(a6+dt*(a7+a8*dt)))))))
 
-        dt = max(-100.,T[T<=185]-273.16)
+        dt = np.max(-100.,T[T<=185]-273.16)
         esi[T<=185] = 0.00763685 + dt*(0.000151069+dt*7.48215e-07)
 
 
@@ -101,13 +101,10 @@ def e_sat(T,varargin):
         raise ValueError('Unknown thermodynamics type. Cannot calculate saturation vapor pressure')
 
     ## Calculate the mixture of liquid and solid
-    fliq,fice,junk = calculate_frac_ice(T,varargin)
+    fliq,fice,junk = calculate_frac_ice(T,c=c)
 
 
     es = esl*(fliq) + esi*fice
-
-#     if nargout > 1 varargout{1} = esl end
-#     if nargout > 2 varargout{2} = esi end
 
     varargout = [esl,esi]    
 

@@ -22,7 +22,7 @@ class load_constants(object):
 
         self.modeltype = modeltype    
         ## Default microphysical parameters
-        self.gamma = 0 # Default precipitation fallout parameter (0 is reversible, 1 is pseudo-adiabatic)
+        #self.gamma = 0 # Default precipitation fallout parameter (0 is reversible, 1 is pseudo-adiabatic)
         self.ice = 1              # include ice?
         self.deltaT = 40		# mixed-phase range (K)
         
