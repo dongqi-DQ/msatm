@@ -4,7 +4,7 @@ from calculate_frac_ice import calculate_frac_ice
 import numpy as np
 import pdb
 
-def saturation_adjustment(p,T,r_t,c=load_constants('default')):
+def saturation_adjustment(p_in,T_in,r_t_in,c=load_constants('default')):
     """
      Function to calculate the breakdown of water into vapor, liquid and solid 
      based on different microphysical assumptions
@@ -23,6 +23,11 @@ def saturation_adjustment(p,T,r_t,c=load_constants('default')):
      r_t = total water mixing ratio (kg/kg)
      deltaT = mixed phase range (K) (default = 40)
     """
+    # stupid copy for python reasons
+    p,T,r_t = p_in.copy(),T_in.copy(),r_t_in.copy()
+
+
+    
     es,junk = e_sat(T,c=c)
     rs = c.eps*(es/(p-es))
     r = np.minimum(r_t,rs)

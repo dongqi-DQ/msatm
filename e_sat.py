@@ -2,7 +2,7 @@ from load_constants import load_constants
 import numpy as np
 from calculate_frac_ice import calculate_frac_ice
 
-def e_sat(T,c=load_constants('default')):
+def e_sat(T_in,c=load_constants('default')):
     """
      Function ot calculate saturation vapor pressure
     
@@ -15,6 +15,8 @@ def e_sat(T,c=load_constants('default')):
      ice =  {[0] , [1] }
      deltaT = mixed-phase temperature ranges
     """
+    # stupid copy for python reasons
+    T = T_in.copy()
 
     ## Calculate saturation vapor pressure over liquid and solid
     if c.modeltype == 'default':

@@ -1,14 +1,14 @@
 import numpy as np
 from load_constants import load_constants
 
-def calculate_frac_ice(T,c=load_constants('default')):
+def calculate_frac_ice(T_in,c=load_constants('default')):
     """
     Calculate the fraction of liquid and ice for a saturation adjustment
     
     [fliq,fice,[dfliqdT,dficedT]] = calculate_frac_ice(T,constants)
 
     """
-
+    T = T_in.copy()
     if c.ice == 0: 
         fliq = np.ones(T.shape)
         fice = np.zeros(T.shape)

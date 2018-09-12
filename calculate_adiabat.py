@@ -5,7 +5,7 @@ from integrate_upwards import integrate_upwards
 import numpy as np
 import pdb
 
-def calculate_adiabat(Ts,rts,ps,p,c=load_constants('default'),gamma=0):
+def calculate_adiabat(Ts_in,rts_in,ps_in,p_in,c=load_constants('default'),gamma=0):
     """
      Function to calculate an adiabatic parcel ascent with various thermodynamic assumptions
     
@@ -78,16 +78,22 @@ def calculate_adiabat(Ts,rts,ps,p,c=load_constants('default'),gamma=0):
      within 0.1 K for dp = 20 hPa.
      
     """
-
+    # stupid copy for python object reasons
+    Ts,rts,ps,p = Ts_in.copy(),rts_in.copy(),ps_in.copy(),p_in.copy()
+    
     # Arrangement of the columns
     xygrid = Ts.shape
 
     # Make pressure interval matrix
     if len(p.shape) == 1: 	# If the pressure is a vector
         p = p[:]
-        p = np.tile(p,(*xygrid,1)).T
+        num_plevs = len(p)
+        num_reps = np.prod(xygrid)
+        tilep = np.repeat(p,num_reps).reshape((num_plevs,*xygrid))
+    else:
+        tilep = p
       
-    dp = np.diff(p,n=1,axis=0)
+    dp = np.diff(tilep,n=1,axis=0)
 
     # persistent big_dp
     # if max(abs(dp(:))) >= 5000 & isempty(big_dp)
@@ -97,11 +103,11 @@ def calculate_adiabat(Ts,rts,ps,p,c=load_constants('default'),gamma=0):
     # end
 
     # Initialize profiles
-    T  = np.zeros((p.shape[0],*xygrid))*np.nan #nan([size(p,1) xygrid ]) # temperature
-    rv = np.zeros((p.shape[0],*xygrid))*np.nan #nan([size(p,1) xygrid ]) # vapor
-    rl = np.zeros((p.shape[0],*xygrid))*np.nan #nan([size(p,1) xygrid ]) # liquid
-    ri = np.zeros((p.shape[0],*xygrid))*np.nan #nan([size(p,1) xygrid ]) # solid
-    rt = np.zeros((p.shape[0],*xygrid))*np.nan #nan([size(p,1) xygrid ]) # total water
+    T  = np.zeros((tilep.shape[0],*xygrid))*np.nan #nan([size(p,1) xygrid ]) # temperature
+    rv = np.zeros((tilep.shape[0],*xygrid))*np.nan #nan([size(p,1) xygrid ]) # vapor
+    rl = np.zeros((tilep.shape[0],*xygrid))*np.nan #nan([size(p,1) xygrid ]) # liquid
+    ri = np.zeros((tilep.shape[0],*xygrid))*np.nan #nan([size(p,1) xygrid ]) # solid
+    rt = np.zeros((tilep.shape[0],*xygrid))*np.nan #nan([size(p,1) xygrid ]) # total water
 
     # Initialize surface values
     rvs,junk1,junk2,junk3 = saturation_adjustment(ps,Ts,rts,c=c)
@@ -115,10 +121,10 @@ def calculate_adiabat(Ts,rts,ps,p,c=load_constants('default'),gamma=0):
     T_LCL,p_LCL,junk = calculate_LCL(Ts,rts,ps,c=c)
 
     Im_prev = np.zeros(Ts.shape,dtype=bool)
-    for k in range(p.shape[0]):
+    for k in range(tilep.shape[0]):
 
         # Pressure at this level
-        pk = p[k,...] #squeeze(p(k,:,:,:))
+        pk = tilep[k,...] #squeeze(p(k,:,:,:))
 
         # Find regions where the surface pressure is larger than the current level p(k)
         Ia = ps>=pk  #ps>=reshape(p(k,:,:,:),xygrid)
@@ -147,14 +153,14 @@ def calculate_adiabat(Ts,rts,ps,p,c=load_constants('default'),gamma=0):
             dps = pk - p_LCL
             T[k,Is],rt[k,Is],rv[k,Is],rl[k,Is],ri[k,Is] = integrate_upwards(T_LCL[Is],rts[Is],p_LCL[Is],dps[Is],c=c,gamma=gamma)
         ## Now integrate from level k to level k+1
-        if (k < p.shape[0]-1) & (Im.sum()>0): #size(p,1)
-            T[k+1,Im],rt[k+1,Im],rv[k+1,Im],rl[k+1,Im],ri[k+1,Im] = integrate_upwards(T[k,Im],rt[k,Im],p[k,Im],dp[k,Im],c=c,gamma=gamma)
+        if (k < tilep.shape[0]-1) & (Im.sum()>0): #size(p,1)
+            T[k+1,Im],rt[k+1,Im],rv[k+1,Im],rl[k+1,Im],ri[k+1,Im] = integrate_upwards(T[k,Im],rt[k,Im],tilep[k,Im],dp[k,Im],c=c,gamma=gamma)
             
         Im_prev = Im
 
     T_rho = T*(1 + rv/c.eps)/(1+rv+rl+ri)
 
-    return T,rv,rl,ri,T_rho 
+    return T.squeeze(),rv.squeeze(),rl.squeeze(),ri.squeeze(),T_rho.squeeze() 
 
 
 

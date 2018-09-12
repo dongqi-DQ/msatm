@@ -5,7 +5,7 @@ from saturation_adjustment import saturation_adjustment
 import pdb
 import numpy as np
 
-def calculate_dTdp_adiabatic(T,rt,p,c=load_constants('default'),gamma=0):
+def calculate_dTdp_adiabatic(T_in,rt_in,p_in,c=load_constants('default'),gamma=0):
     """
      Function to calculate the derivative of Temperature with respect to pressure along moist adiabat 
      dTdp = calculate_dTdp(T,rt,p,[gamma,type,ice,deltaT]) 
@@ -32,7 +32,10 @@ def calculate_dTdp_adiabatic(T,rt,p,c=load_constants('default'),gamma=0):
     
      If gamma = 1, it is assumed that rc = 0 at all times.
     """
+    # stupid copy for python object reasons
+    T,rt,p = T_in.copy(),rt_in.copy(),p_in.copy()
     
+
     rv,rl,ri,rs = saturation_adjustment(p,T,rt,c=c)
 
     if gamma == 1:

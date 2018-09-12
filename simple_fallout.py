@@ -3,7 +3,7 @@ from load_constants import load_constants
 import numpy as np
 import pdb
 
-def simple_fallout(T,cond,rl,ri,c=load_constants('default'),gamma=0):
+def simple_fallout(T_in,cond_in,rl_in,ri_in,c=load_constants('default'),gamma=0):
     """
      A very simple precipitation parameterization for use in parcel ascent calculations.
      Assumes a fraction gamma of the condensation is reomved from the parcel
@@ -15,6 +15,8 @@ def simple_fallout(T,cond,rl,ri,c=load_constants('default'),gamma=0):
     		ri	ice water mixing ratio (kg/kg)
     		gamma   fraction to precipitate (0-1)
     """
+    # stupid copy for python reasons
+    T,cond,rl,ri = T_in.copy(),cond_in.copy(),rl_in.copy(),ri_in.copy()
 
     # Break the condensation into ice and liquid
     fliq,fice,junk = calculate_frac_ice(T,c=c)

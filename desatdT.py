@@ -2,7 +2,7 @@ from load_constants import load_constants
 from e_sat import e_sat
 from calculate_frac_ice import calculate_frac_ice
 
-def desatdT(T,c=load_constants('default')):
+def desatdT(T_in,c=load_constants('default')):
     """
      Function to calculate the derivative of the saturation vapor pressure
      with respect to temperature.
@@ -28,7 +28,8 @@ def desatdT(T,c=load_constants('default')):
      Clausius-Clapeyron equation exactly. But this is a numerical issue inherent
      to using approximate formulas for the saturation vapor curve.
     """
-
+    # stupid copy for python reasons
+    T = T_in.copy()
 
     junk,[esl,esi] = e_sat(T,c=c)
     fliq,fice,[dfliqdT,junk] = calculate_frac_ice(T,c=c)

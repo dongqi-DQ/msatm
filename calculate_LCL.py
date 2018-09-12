@@ -90,7 +90,7 @@ def calculate_LCL(T,r,p,c=load_constants('default')):
         myiter = 0
         dT = np.ones(T_LCL.shape)
 
-        while (max(abs(dT))>0.02) & (I.sum()>0):
+        while (np.max(np.abs(dT))>0.02) & (I.sum()>0):
             es,[esl,esi] = e_sat(T_LCL[I])
             RHi_LCL = es/esi
             lambert_input = (RHi[I]/RHi_LCL)**(1/ac[I])*cc[I]*np.exp(cc[I])
