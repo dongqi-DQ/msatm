@@ -120,6 +120,10 @@ def calculate_adiabat(Ts_in,rts_in,ps_in,p_in,c=load_constants('default'),gamma=
 
     T_LCL,p_LCL,junk = calculate_LCL(Ts,rts,ps,c=c)
 
+    # If LCL is below surface, set it to surface
+    T_LCL[p_LCL>ps] = Ts[p_LCL>ps]
+    p_LCL[p_LCL>ps] = ps[p_LCL>ps]
+
     Im_prev = np.zeros(Ts.shape,dtype=bool)
     for k in range(tilep.shape[0]):
 

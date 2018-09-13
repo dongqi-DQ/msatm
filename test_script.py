@@ -263,8 +263,8 @@ from scipy.optimize import fsolve
 # test array calcs
 
 Ts = np.linspace(1,1.1,12).reshape((4,3))*290.
-rs = np.linspace(1,1.1,12).reshape((4,3))*0.02
-ps = np.linspace(1,1.1,12).reshape((4,3))*95000.
+rs = np.ones((4,3))*0.02
+ps = np.ones((4,3))*95000.
 p = np.linspace(95000,10000,96)
 c = load_constants('default')
 c.ice = 1
@@ -272,6 +272,12 @@ gamma = 0
 
 T,rv,rl,ri,T_rho = calculate_adiabat(Ts,rs,ps,p,gamma=gamma,c=c)
 
+for x in range(4):
+    for y in range(3):
+        plt.plot(T[:,x,y],p,label='Ts = '+str(np.round(Ts[x,y],2)))
 
+plt.gca().invert_yaxis()
+plt.legend()
+plt.show()
 
 
