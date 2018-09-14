@@ -1,7 +1,7 @@
-from load_constants import load_constants
+from msatm.load_constants import load_constants
 import numpy as np
-from r_sat import r_sat
-from saturation_adjustment import saturation_adjustment
+from msatm.r_sat import r_sat
+from msatm.saturation_adjustment import saturation_adjustment
 
 def calculate_entropy(T_in,p_in,rt_in,c=load_constants('default'),**kwargs):
     """

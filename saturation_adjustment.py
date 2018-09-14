@@ -1,6 +1,6 @@
-from load_constants import load_constants
-from e_sat import e_sat
-from calculate_frac_ice import calculate_frac_ice
+from msatm.load_constants import load_constants
+from msatm.e_sat import e_sat
+from msatm.calculate_frac_ice import calculate_frac_ice
 import numpy as np
 import pdb
 

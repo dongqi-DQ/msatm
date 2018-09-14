@@ -1,7 +1,7 @@
-from calculate_dTdp_adiabatic import calculate_dTdp_adiabatic
-from simple_fallout import simple_fallout
-from saturation_adjustment import saturation_adjustment
-from load_constants import load_constants
+from msatm.calculate_dTdp_adiabatic import calculate_dTdp_adiabatic
+from msatm.simple_fallout import simple_fallout
+from msatm.saturation_adjustment import saturation_adjustment
+from msatm.load_constants import load_constants
 import pdb
 
 def integrate_upwards(Tk_in,rtk_in,pk_in,dp_in,c=load_constants('default'),gamma=0):

@@ -1,4 +1,4 @@
-from load_constants import load_constants
+from msatm.load_constants import load_constants
 import numpy as np
 
 def calculate_theta_ep(T_in,r_in,p_in,c=load_constants('bolton')):

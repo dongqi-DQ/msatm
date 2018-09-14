@@ -1,6 +1,6 @@
-from load_constants import load_constants
+from msatm.load_constants import load_constants
 import numpy as np
-from e_sat import e_sat
+from msatm.e_sat import e_sat
 
 def r_sat(T_in,p_in,c=load_constants('default')):
     """

@@ -1,5 +1,5 @@
-from calculate_frac_ice import calculate_frac_ice
-from load_constants import load_constants
+from msatm.calculate_frac_ice import calculate_frac_ice
+from msatm.load_constants import load_constants
 import numpy as np
 import pdb
 

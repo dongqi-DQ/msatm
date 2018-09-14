@@ -2,17 +2,17 @@
 # perform some basic tests to check python version
 # of marty singh's +atm module.
 
-from load_constants import load_constants
+from msatm.load_constants import load_constants
 import numpy as np
-from e_sat import e_sat
+from msatm.e_sat import e_sat
 import matplotlib.pyplot as plt
-from load_constants import load_constants
-from calculate_adiabat import calculate_adiabat
+from msatm.load_constants import load_constants
+from msatm.calculate_adiabat import calculate_adiabat
 import pdb
-from calculate_entropy import calculate_entropy
-from saturation_adjustment import saturation_adjustment
-from calculate_theta_ep import calculate_theta_ep
-from invert_theta_ep import invert_theta_ep
+from msatm.calculate_entropy import calculate_entropy
+from msatm.saturation_adjustment import saturation_adjustment
+from msatm.calculate_theta_ep import calculate_theta_ep
+from msatm.invert_theta_ep import invert_theta_ep
 from scipy.optimize import fsolve
 
 ####################################################################

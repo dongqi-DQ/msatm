@@ -1,6 +1,6 @@
-from load_constants import load_constants
+from msatm.load_constants import load_constants
 import numpy as np
-from calculate_frac_ice import calculate_frac_ice
+from msatm.calculate_frac_ice import calculate_frac_ice
 
 def e_sat(T_in,c=load_constants('default')):
     """

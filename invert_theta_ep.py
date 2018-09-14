@@ -1,7 +1,7 @@
-from load_constants import load_constants
+from msatm.load_constants import load_constants
 import numpy as np
-from r_sat import r_sat
-from calculate_theta_ep import calculate_theta_ep
+from msatm.r_sat import r_sat
+from msatm.calculate_theta_ep import calculate_theta_ep
 import pdb
 
 def invert_theta_ep(theta_ep_in,r_in,Tstar_in,p_in,c=load_constants('bolton')):

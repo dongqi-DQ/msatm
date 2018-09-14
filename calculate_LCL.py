@@ -1,5 +1,5 @@
-from load_constants import load_constants
-from e_sat import e_sat
+from msatm.load_constants import load_constants
+from msatm.e_sat import e_sat
 import numpy as np
 from scipy.special import lambertw
 import pdb

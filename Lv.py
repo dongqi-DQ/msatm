@@ -1,4 +1,5 @@
-from load_constants import load_constants 
+from msatm.load_constants import load_constants 
+
 def Lv(T,c=load_constants('default')):
     """
     Calculate the latent heats of vaporization 

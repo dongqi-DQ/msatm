@@ -1,5 +1,5 @@
 import numpy as np
-from load_constants import load_constants
+from msatm.load_constants import load_constants
 
 def calculate_frac_ice(T_in,c=load_constants('default')):
     """
