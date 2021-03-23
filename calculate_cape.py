@@ -1,5 +1,5 @@
 # using marty's code, calculate CAPE and CIN
-from calculate_adiabat import calculate_adiabat
+from msatm.calculate_adiabat import calculate_adiabat
 import xarray as xr
 import numpy as np
 from msatm.saturation_adjustment import saturation_adjustment
