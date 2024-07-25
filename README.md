@@ -1,5 +1,11 @@
 # msatm
 
+I imported this repo from here:
+
+https://bitbucket.org/sugsnarsey/msatm/src/master/
+
+Below is the original repo:
+
 In this repository I am converting Marty Singh's matlab package to Python.
 
 Details of the matlab package can be found here:
